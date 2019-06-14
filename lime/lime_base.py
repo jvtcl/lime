@@ -109,6 +109,7 @@ class LimeBase(object):
                                    neighborhood_data,
                                    neighborhood_labels,
                                    distances,
+                                   gw,
                                    label,
                                    num_features,
                                    feature_selection='auto',
@@ -121,6 +122,7 @@ class LimeBase(object):
             neighborhood_labels: corresponding perturbed labels. should have as
                                  many columns as the number of possible labels.
             distances: distances to original data point.
+            gw: proximity weights
             label: label for which we want an explanation
             num_features: maximum number of features in explanation
             feature_selection: how to select num_features. options are:
@@ -150,6 +152,11 @@ class LimeBase(object):
         """
 
         weights = self.kernel_fn(distances)
+
+        ## perform geographic weighting
+        weights = gw * (1 + weights)
+        weights = (weights - weights.min()) / (weights.max() - weights.min()) # range-standardize updated weights
+
         labels_column = neighborhood_labels[:, label]
         used_features = self.feature_selection(neighborhood_data,
                                                labels_column,
